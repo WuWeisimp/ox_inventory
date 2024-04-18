@@ -1,6 +1,6 @@
 return {
 	{
-		items = {
+		--[[items = {
 			{
 				name = 'lockpick',
 				ingredients = {
@@ -30,5 +30,6 @@ return {
 			},
 		},
 		blip = { id = 566, colour = 31, scale = 0.8 },
-	},
+	},]]
+}
 }
