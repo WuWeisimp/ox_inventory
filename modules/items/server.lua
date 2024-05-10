@@ -10,15 +10,12 @@ Items.containers = require 'modules.items.containers'
 
 -- Possible metadata when creating garbage
 local trash = {
-	{description = 'An old rolled up newspaper.', weight = 200, image = 'trash_newspaper'},
-	{description = 'A discarded burger shot carton.', weight = 50, image = 'trash_burgershot'},
+	{description = 'A discarded burger carton.', weight = 50, image = 'trash_burger'},
 	{description = 'An empty soda can.', weight = 20, image = 'trash_can'},
 	{description = 'A mouldy piece of bread.', weight = 70, image = 'trash_bread'},
-	{description = 'An empty ciggarette carton.', weight = 10, image = 'trash_fags'},
-	{description = 'A slightly used pair of panties.', weight = 20, image = 'panties'},
-	{description = 'An empty coffee cup.', weight = 20, image = 'trash_coffee'},
-	{description = 'A crumpled up piece of paper.', weight = 5, image = 'trash_paper'},
 	{description = 'An empty chips bag.', weight = 5, image = 'trash_chips'},
+	{description = 'A slightly used pair of panties.', weight = 20, image = 'panties'},
+	{description = 'An old rolled up newspaper.', weight = 200, image = 'WEAPON_ACIDPACKAGE'},
 }
 
 ---@param _ table?
@@ -468,5 +465,100 @@ end
 -- end)
 
 -----------------------------------------------------------------------------------------------
+AddEventHandler('inventory:refresh',function()
+	local success, items = pcall(MySQL.query.await, 'SELECT * FROM av_items')
+	if success and items and next(items) then
+		local resource = GetCurrentResourceName()
+		local path = GetResourcePath(resource)
+		local dump = {}
+		for i = 1, #items do
+			local item = items[i]
+			if not ItemList[item.name] then
+				item.close = item.closeonuse == nil and true or item.closeonuse
+				item.stack = item.stackable == nil and true or item.stackable
+				item.description = item.description
+				item.weight = item.weight or 0
+				dump[i] = item
+				if item.image then
+					PerformHttpRequest(item.image, function (errorCode, resultData, resultHeaders)
+						if errorCode >= 200 and errorCode < 300 then
+							local image = assert(io.open(path..'/web/images/'..item.name..'.png', "wb"))
+							image:write(resultData)
+							image:flush()
+							image:close()
+						end
+					end)
+				end
+			end
+		end
+		if table.type(dump) ~= "empty" then
+			local file = {string.strtrim(LoadResourceFile(shared.resource, 'data/items.lua'))}
+			file[1] = file[1]:gsub('}$', '')
+			local itemFormat = [[
+				['%s'] = {
+					label = '%s',
+					weight = %s,
+					stack = %s,
+					close = %s,
+					description = %s
+				},
+			]]
+			local fileSize = #file
+			for _, item in pairs(dump) do
+				local formatName = item.name:gsub("'", "\\'"):lower()
+				if not ItemList[formatName] then
+					fileSize += 1
+					file[fileSize] = (itemFormat):format(formatName, item.label:gsub("'", "\\'"):lower(), item.weight, item.stack, item.close, item.description and ('"%s"'):format(item.description) or 'nil')
+					ItemList[formatName] = item
+				end
+			end
+			file[fileSize+1] = '}'
+			SaveResourceFile(shared.resource, 'data/items.lua', table.concat(file), -1)
+		end
+	end
+end)
+
+---AmmoBoxes
+Item ('box_ammo_9', function(event, item, inventory, data, slot)
+    if event == 'usedItem' then
+        Inventory.AddItem(inventory, 'ammo-9', 120)
+    end
+end)
+
+Item('box_ammo_45', function(event, item, inventory, data, slot)
+    if event == 'usedItem' then
+        Inventory.AddItem(inventory, 'ammo-45', 120)
+    end
+end)
+
+Item('box_ammo_50', function(event, item, inventory, data, slot)
+    if event == 'usedItem' then
+        Inventory.AddItem(inventory, 'ammo-50', 120)
+    end
+end)
+
+Item('box_ammo_rifle', function(event, item, inventory, data, slot)
+    if event == 'usedItem' then
+        Inventory.AddItem(inventory, 'ammo-rifle', 60)
+    end
+end)
+
+Item('box_ammo_rifle2', function(event, item, inventory, data, slot)
+    if event == 'usedItem' then
+        Inventory.AddItem(inventory, 'ammo-rifle2', 60)
+    end
+end)
+
+Item('box_ammo_shotgun', function(event, item, inventory, data, slot)
+    if event == 'usedItem' then
+        Inventory.AddItem(inventory, 'ammo-shotgun', 10)
+    end
+end)
+
+Item('box_ammo_sniper', function(event, item, inventory, data, slot)
+    if event == 'usedItem' then
+        Inventory.AddItem(inventory, 'ammo-sniper', 10)
+    end
+end)
 
 return Items
