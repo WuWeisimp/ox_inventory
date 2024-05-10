@@ -17,6 +17,7 @@ end
 SetTimeout(500, function()
 	local player = NDCore.getPlayer()
     if not player then return end
+<<<<<<< HEAD
     OnPlayerData("groups", reorderGroups(player.groups))
 end)
 
@@ -26,6 +27,17 @@ end)
 
 RegisterNetEvent("ND:updateCharacter", function(character)
     OnPlayerData("groups", reorderGroups(character.groups))
+=======
+    client.setPlayerData("groups", reorderGroups(player.groups))
+end)
+
+RegisterNetEvent("ND:characterLoaded", function(character)
+    client.setPlayerData("groups", reorderGroups(character.groups))
+end)
+
+RegisterNetEvent("ND:updateCharacter", function(character)
+    client.setPlayerData("groups", reorderGroups(character.groups))
+>>>>>>> 2e4e38f28a6776d14a18e5669ccd1249fc0ff1b3
 end)
 
 ---@diagnostic disable-next-line: duplicate-set-field
